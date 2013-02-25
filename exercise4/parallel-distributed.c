@@ -6,8 +6,8 @@
 #include <mpi.h>
 
 void singleIteration(int length);
-int numprocs,rank,namelen;
-char processor_name[MPI_MAX_PROCESSOR_NAME];
+int size,rank,processorName;
+char processorNames[MPI_MAX_PROCESSOR_NAME];
 MPI_Status status;
 
 
@@ -29,39 +29,37 @@ double sumVector(vector_t* vector){
 
 void singleIteration(int length){
 
-	int partition_size = ( 1 <<length  ) / numprocs;
-	int offset = ( 1<< length) %  partition_size;
+	int partitionSize = ( 1 <<length  ) / size;
+	int offset = ( 1<< length) %  partitionSize;
 
 	vector_t* vector;
 	if ( rank == 0 ) {
 		vector = createVector(1<<length);
-		double * arr_os = vector->data+offset, sum = 0, temp ;
-		for ( int i = 1;  i < numprocs ; i++ ) {
-			MPI_Send ( arr_os + i * partition_size, partition_size, MPI_DOUBLE, i , 100 , MPI_COMM_WORLD);
+		double * vectorDataOffset = vector->data+offset, sum = 0, temp ;
+		for ( int i = 1;  i < size ; i++ ) {
+			MPI_Send ( vectorDataOffset + i * partitionSize, partitionSize, MPI_DOUBLE, i , 0 , MPI_COMM_WORLD);
 		}
-		for ( int i = 0 ;  i < partition_size+offset ; i++){
-			sum +=vector->data[i];	
-		}
-		for ( int i = 1;  i < numprocs ; i++ ) {
-			MPI_Recv ( &temp , 1 ,  MPI_DOUBLE , MPI_ANY_SOURCE , 101, MPI_COMM_WORLD, &status );
+		sum=sumVector(vector);
+		for ( int i = 1;  i < size ; i++ ) {
+			MPI_Recv ( &temp , 1 ,  MPI_DOUBLE , MPI_ANY_SOURCE , 1, MPI_COMM_WORLD, &status );
 			sum+= temp;
 		}
 
 		printf("S - S(%.0f) \t %.16f \t Error: %.16f\n", pow(2,length), sum, answer-sum) ;
 	}else {
-		vector = createVector(partition_size);
-		MPI_Recv( vector->data , partition_size , MPI_DOUBLE, 0 , 100 , MPI_COMM_WORLD , &status);
+		vector = createVector(partitionSize);
+		MPI_Recv( vector->data , partitionSize , MPI_DOUBLE, 0 , 0 , MPI_COMM_WORLD , &status);
 		double sum = sumVector(vector);
-		MPI_Send(&sum ,1 ,MPI_DOUBLE , 0 , 101, MPI_COMM_WORLD );
+		MPI_Send(&sum ,1 ,MPI_DOUBLE , 0 , 1, MPI_COMM_WORLD );
 	}
 
 }
 
 int main(int argc, char** argv){
 	MPI_Init(&argc, &argv);
-	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Get_processor_name(processor_name, &namelen);
+	MPI_Get_processor_name(processorNames, &processorName);
 	for(int n = 4; n <= 14; n++){
 		singleIteration(n);
 	}
