@@ -6,7 +6,6 @@
 #ifdef HAVE_OPENMP
 #include <omp.h>
 #endif
-#include <sys/time.h>
 
 
 vector_t* createVector(int len){
@@ -19,11 +18,8 @@ vector_t* createVector(int len){
 }
 
 double sumVector(vector_t* vector){
-	if(vector == NULL || vector->len==0 || vector->data == NULL)
-		return 0;
-	if(vector->len == 1)
-		return vector->data[0];
 	double sum = 0;
+	#pragma omp paralell for reduction( +: sum) 
 	for(int i = 0; i < vector->len; i++)
 		sum += vector->data[i];
 	return sum;
