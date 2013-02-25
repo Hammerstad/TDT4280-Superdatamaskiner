@@ -58,5 +58,6 @@ ENDMACRO(ADD_APP)
 # Add a program consisting of these sources
 ADD_APP(serial serial.c)
 ADD_APP(parallel-shared parallel-shared.c)
+ADD_APP(parallel-distributed parallel-distributed.c)
 IF(OPENMP_FOUND)
 ENDIF(OPENMP_FOUND)
