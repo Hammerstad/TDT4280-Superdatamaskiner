@@ -3,9 +3,6 @@
 #include <math.h>
 #include <stdio.h>
 #define answer 1.64493406684822643647241516664602518921894990120679843773555
-#ifdef HAVE_OPENMP
-#include <omp.h>
-#endif
 #include <sys/time.h>
 
 
